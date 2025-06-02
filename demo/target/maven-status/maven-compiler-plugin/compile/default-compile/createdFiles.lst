@@ -1,0 +1,5 @@
+com\validacao\boleto\ValidarBoletoService.class
+com\validacao\boleto\Boleto.class
+com\validacao\boleto\ValidarBoletoController.class
+com\validacao\boleto\BoletoRepository.class
+com\validacao\boleto\CodigoBoletoRequest.class

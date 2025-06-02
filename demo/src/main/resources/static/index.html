@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Validação de Boleto</title>
+    <style>
+      /* Reset básico */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Helvetica Neue", Arial, sans-serif;
+        background-color: #f5f5f5;
+        color: #333;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+      .container {
+        background: #fff;
+        width: 100%;
+        max-width: 460px;
+        border-radius: 4px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+      }
+      .header {
+        background-color: #ef2a2a;
+        padding: 16px;
+        text-align: center;
+      }
+      .header h1 {
+        color: #fff;
+        font-size: 1.5rem;
+        letter-spacing: 1px;
+      }
+      .body {
+        padding: 24px;
+      }
+      label {
+        display: block;
+        font-size: 0.875rem;
+        margin-bottom: 4px;
+        color: #555;
+      }
+      input {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 16px;
+        border: 1px solid #ccc;
+        border-radius: 2px;
+        font-size: 1rem;
+      }
+      button {
+        width: 100%;
+        padding: 12px;
+        background-color: #ef2a2a;
+        color: #fff;
+        border: none;
+        border-radius: 2px;
+        font-size: 1rem;
+        cursor: pointer;
+        letter-spacing: 0.5px;
+      }
+      button:hover {
+        background-color: #d41f1f;
+      }
+      #resultado {
+        margin-top: 20px;
+        font-size: 1.1rem;
+        text-align: center;
+      }
+      .detalhes-card {
+        margin-top: 16px;
+        background: #fafafa;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        padding: 16px;
+      }
+      .detalhes-card h2 {
+        margin-bottom: 12px;
+        font-size: 1.2rem;
+        color: #2c3e50;
+      }
+      .detalhes-card table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .detalhes-card th,
+      .detalhes-card td {
+        padding: 8px;
+        text-align: left;
+        font-size: 0.95rem;
+      }
+      .detalhes-card th {
+        background-color: #f0f0f0;
+        width: 40%;
+      }
+      .detalhes-card tr:not(:last-child) td {
+        border-bottom: 1px solid #e0e0e0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Clientes Santander</h1>
+      </div>
+      <div class="body">
+        <form id="form-boleto">
+          <label for="linhaDigitavel">Linha Digitável</label>
+          <input
+            type="text"
+            id="linhaDigitavel"
+            name="linhaDigitavel"
+            required
+          />
+
+          <label for="agencia">Agência</label>
+          <input type="text" id="agencia" name="agencia" required />
+
+          <label for="recebedor">Conta/Código do Recebedor</label>
+          <input type="text" id="recebedor" name="recebedor" required />
+
+          <label for="valor">Valor</label>
+          <input type="text" id="valor" name="valor" required />
+
+          <label for="vencimento">Vencimento</label>
+          <input type="date" id="vencimento" name="vencimento" required />
+
+          <label for="cnpj">CNPJ</label>
+          <input type="text" id="cnpj" name="cnpj" required />
+
+          <button type="submit">Validar</button>
+        </form>
+        <div id="resultado"></div>
+        <div id="detalhes" class="detalhes-card" style="display: none">
+          <h2>Detalhes do Boleto</h2>
+          <table>
+            <tr>
+              <th>Código</th>
+              <td id="d-codigo"></td>
+            </tr>
+            <tr>
+              <th>Agência</th>
+              <td id="d-agencia"></td>
+            </tr>
+            <tr>
+              <th>Recebedor</th>
+              <td id="d-recebedor"></td>
+            </tr>
+            <tr>
+              <th>Valor</th>
+              <td id="d-valor"></td>
+            </tr>
+            <tr>
+              <th>Vencimento</th>
+              <td id="d-vencimento"></td>
+            </tr>
+            <tr>
+              <th>CNPJ</th>
+              <td id="d-cnpj"></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document
+        .getElementById("form-boleto")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          const dados = Object.fromEntries(new FormData(e.target).entries());
+          fetch("/validar-boleto", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dados),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              const resultadoEl = document.getElementById("resultado");
+              const detalhesEl = document.getElementById("detalhes");
+              if (data.boleto) {
+                resultadoEl.innerText = data.mensagem;
+                document.getElementById("d-codigo").innerText =
+                  data.boleto.codigo;
+                document.getElementById("d-agencia").innerText =
+                  data.boleto.agencia;
+                document.getElementById("d-recebedor").innerText =
+                  data.boleto.recebedor;
+                document.getElementById("d-valor").innerText =
+                  data.boleto.valor;
+                document.getElementById("d-vencimento").innerText =
+                  data.boleto.vencimento;
+                document.getElementById("d-cnpj").innerText = data.boleto.cnpj;
+                detalhesEl.style.display = "block";
+              } else {
+                resultadoEl.innerText = data.mensagem;
+                detalhesEl.style.display = "none";
+              }
+            })
+            .catch(() => {
+              document.getElementById("resultado").innerText =
+                "⚠️ Erro ao validar boleto.";
+              document.getElementById("detalhes").style.display = "none";
+            });
+        });
+    </script>
+  </body>
+</html>

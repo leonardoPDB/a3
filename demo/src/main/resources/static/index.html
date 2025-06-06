@@ -103,6 +103,11 @@
       .detalhes-card tr:not(:last-child) td {
         border-bottom: 1px solid #e0e0e0;
       }
+      .error {
+        color: #d41f1f;
+        font-size: 0.9rem;
+        margin-bottom: 16px;
+      }
     </style>
   </head>
   <body>
@@ -119,21 +124,27 @@
             name="linhaDigitavel"
             required
           />
+          <div id="error-linhaDigitavel" class="error"></div>
 
           <label for="agencia">Agência</label>
           <input type="text" id="agencia" name="agencia" required />
+          <div id="error-agencia" class="error"></div>
 
           <label for="recebedor">Conta/Código do Recebedor</label>
           <input type="text" id="recebedor" name="recebedor" required />
+          <div id="error-recebedor" class="error"></div>
 
           <label for="valor">Valor</label>
           <input type="text" id="valor" name="valor" required />
+          <div id="error-valor" class="error"></div>
 
           <label for="vencimento">Vencimento</label>
           <input type="date" id="vencimento" name="vencimento" required />
+          <div id="error-vencimento" class="error"></div>
 
           <label for="cnpj">CNPJ</label>
           <input type="text" id="cnpj" name="cnpj" required />
+          <div id="error-cnpj" class="error"></div>
 
           <button type="submit">Validar</button>
         </form>
@@ -175,13 +186,27 @@
         .getElementById("form-boleto")
         .addEventListener("submit", function (e) {
           e.preventDefault();
+
+          // Limpa mensagens de erro anteriores
+          document
+            .querySelectorAll(".error")
+            .forEach((el) => (el.innerText = ""));
+
           const dados = Object.fromEntries(new FormData(e.target).entries());
+
           fetch("/validar-boleto", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(dados),
           })
-            .then((res) => res.json())
+            .then((res) => {
+              if (!res.ok) {
+                return res.json().then((err) => {
+                  throw err;
+                });
+              }
+              return res.json();
+            })
             .then((data) => {
               const resultadoEl = document.getElementById("resultado");
               const detalhesEl = document.getElementById("detalhes");
@@ -204,10 +229,20 @@
                 detalhesEl.style.display = "none";
               }
             })
-            .catch(() => {
-              document.getElementById("resultado").innerText =
-                "⚠️ Erro ao validar boleto.";
-              document.getElementById("detalhes").style.display = "none";
+            .catch((err) => {
+              const resultadoEl = document.getElementById("resultado");
+              resultadoEl.innerText = "⚠️ Erro ao validar boleto.";
+              detalhesEl.style.display = "none";
+
+              // Exibe erros específicos de campo
+              if (err) {
+                for (const [field, message] of Object.entries(err)) {
+                  const errorEl = document.getElementById(`error-${field}`);
+                  if (errorEl) {
+                    errorEl.innerText = message;
+                  }
+                }
+              }
             });
         });
     </script>
